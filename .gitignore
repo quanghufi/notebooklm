@@ -5,3 +5,9 @@ data/
 .env
 .agent/
 .notebooklm-mcp/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+.venv/

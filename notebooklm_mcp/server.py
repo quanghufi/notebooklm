@@ -189,8 +189,8 @@ class ServerState:
     
     def _init_client(self):
         """Initialize API client from cached tokens (runs in thread)."""
-        from notebooklm_mcp.auth import load_cached_tokens
-        from notebooklm_mcp.api_client import NotebookLMClient
+        from .auth import load_cached_tokens
+        from .api_client import NotebookLMClient
         
         tokens = load_cached_tokens()
         if not tokens:
@@ -499,5 +499,36 @@ async def main():
     await mcp.run(transport="stdio")
 
 
+class _FilteredStdout:
+    """Filter stdout to suppress FastMCP ASCII banners that break JSON-RPC."""
+
+    def __init__(self, original):
+        self.original = original
+        self.encoding = getattr(original, 'encoding', 'utf-8')
+
+    def write(self, s):
+        if any(c in s for c in ['╭', '│', '╰', '─']):
+            return len(s)
+        if "FastMCP server" in s:
+            return len(s)
+        return self.original.write(s)
+
+    def flush(self):
+        if hasattr(self.original, 'flush'):
+            self.original.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.original, name)
+
+
+def cli_main():
+    """CLI entry point for 'notebooklm-mcp' command.
+
+    Patches stdout to filter ASCII art banners before starting the server.
+    """
+    sys.stdout = _FilteredStdout(sys.stdout)
+    mcp.run(transport="stdio")
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    cli_main()

@@ -2,7 +2,7 @@
 
 MCP Server for [Google NotebookLM](https://notebooklm.google.com) — manage notebooks, sources, and Q&A via API.
 
-## Features
+## ✨ Features
 
 - 🔍 **List & Get** notebooks
 - ➕ **Create, Rename, Delete** notebooks
@@ -11,62 +11,72 @@ MCP Server for [Google NotebookLM](https://notebooklm.google.com) — manage not
 - 📊 **Notebook Summary**
 - 🔄 **State machine** with auto-recovery (auth refresh, retry with backoff)
 
-## Setup
+## 🚀 Quick Start
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
-pip install -r requirements.txt
+# From GitHub
+pip install git+https://github.com/quanghufi/notebooklm-mcp.git
+
+# Or clone and install locally
+git clone https://github.com/quanghufi/notebooklm-mcp.git
+cd notebooklm-mcp
+pip install .
 ```
 
 ### 2. Authenticate
 
-You need Google cookies from an authenticated NotebookLM session. Save them to `~/.notebooklm-mcp/auth.json`:
-
-```json
-{
-  "cookies": {
-    "SID": "...",
-    "HSID": "...",
-    "SSID": "...",
-    "APISID": "...",
-    "SAPISID": "...",
-    "__Secure-1PSID": "...",
-    "__Secure-3PSID": "...",
-    "__Secure-1PSIDTS": "...",
-    "__Secure-3PSIDTS": "..."
-  },
-  "csrf_token": "",
-  "session_id": "",
-  "extracted_at": 0
-}
+```bash
+notebooklm-mcp-auth
 ```
 
-> **Tip**: Extract cookies from Chrome DevTools → Application → Cookies → `notebooklm.google.com`
+This will guide you to paste cookies from Chrome DevTools. You need cookies from an active NotebookLM session:
+
+1. Open Chrome → https://notebooklm.google.com
+2. Make sure you're logged in
+3. Open DevTools (F12) → Application → Cookies → `notebooklm.google.com`
+4. Copy the required cookies (SID, HSID, SSID, APISID, SAPISID, etc.)
+
+Tokens are cached to `~/.notebooklm-mcp/auth.json`.
 
 ### 3. Run the MCP server
 
 ```bash
-python run_mcp.py
+notebooklm-mcp
 ```
 
 ### 4. Configure your MCP client
 
-Add to your MCP config:
+#### Claude Desktop / Antigravity
 
 ```json
 {
   "mcpServers": {
     "notebooklm": {
-      "command": "python",
-      "args": ["path/to/run_mcp.py"],
+      "command": "notebooklm-mcp",
       "transport": "stdio"
     }
   }
 }
 ```
 
-## Tools
+#### VS Code (Copilot)
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "notebooklm": {
+        "command": "notebooklm-mcp",
+        "type": "stdio"
+      }
+    }
+  }
+}
+```
+
+## 🛠️ Tools
 
 | Tool | Description |
 |------|-------------|
@@ -81,18 +91,29 @@ Add to your MCP config:
 | `add_text_source` | Add text as source |
 | `get_notebook_summary` | Get notebook summary |
 
-## Architecture
+## 📁 Architecture
 
 ```
-server.py          — FastMCP server + state machine (10 tools)
-run_mcp.py         — Entry point (filters stdout banners)
-notebooklm_mcp/    — Core API package
-  ├── api_client.py  — HTTP client (httpx)
-  ├── auth.py        — Token management
-  ├── constants.py   — API constants
-  └── exceptions.py  — Custom exceptions
+notebooklm_mcp/
+├── __init__.py      — Package exports
+├── server.py        — FastMCP server + state machine (10 tools)
+├── api_client.py    — HTTP client (httpx, batchexecute RPC)
+├── auth.py          — Token management & caching
+├── auth_cli.py      — CLI for authentication
+├── constants.py     — API constants & code mappings
+└── exceptions.py    — Custom exceptions
 ```
 
-## License
+## 🔧 Development
+
+```bash
+# Install in editable mode
+pip install -e .
+
+# Check auth status
+notebooklm-mcp-auth --check
+```
+
+## 📄 License
 
 MIT
